@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 DeflatedPickle under the MIT license */
+
 package com.deflatedpickle.achoo.mixin;
 
 import net.minecraft.entity.EntityType;
@@ -19,49 +21,61 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @SuppressWarnings({"UnusedMixin", "unused"})
 @Mixin(CreeperEntity.class)
-abstract public class MixinCreeperEntity extends HostileEntity {
-    @Shadow private int currentFuseTime;
-    @Shadow private int fuseTime;
-    @Shadow private int lastFuseTime;
-    @Shadow @Final private static TrackedData<Boolean> IGNITED;
-    @Shadow @Final private static TrackedData<Integer> FUSE_SPEED;
-    @Shadow protected abstract void spawnEffectsCloud();
+public abstract class MixinCreeperEntity extends HostileEntity {
+  @Shadow private int currentFuseTime;
+  @Shadow private int fuseTime;
+  @Shadow private int lastFuseTime;
+  @Shadow @Final private static TrackedData<Boolean> IGNITED;
+  @Shadow @Final private static TrackedData<Integer> FUSE_SPEED;
 
-    @Shadow public abstract void setTarget(@Nullable LivingEntity target);
+  @Shadow
+  protected abstract void spawnEffectsCloud();
 
-    protected MixinCreeperEntity(EntityType<? extends HostileEntity> entityType, World world) {
-        super(entityType, world);
+  @Shadow
+  public abstract void setTarget(@Nullable LivingEntity target);
+
+  protected MixinCreeperEntity(EntityType<? extends HostileEntity> entityType, World world) {
+    super(entityType, world);
+  }
+
+  /**
+   * @author DeflatedPickle
+   * @reason im lazy
+   */
+  @Overwrite
+  public final void explode() {
+    if (!this.world.isClient) {
+      this.spawnEffectsCloud();
     }
 
-    /**
-     * @author DeflatedPickle
-     * @reason im lazy
-     */
-    @Overwrite
-    public void explode() {
-        if (!this.world.isClient) {
-            this.spawnEffectsCloud();
-        }
+    this.world.playSound(
+        this.getX(),
+        this.getY(),
+        this.getZ(),
+        SoundEvents.ENTITY_TNT_PRIMED,
+        SoundCategory.HOSTILE,
+        1.0f,
+        this.random.nextFloat() * 0.4f + 0.8f,
+        false);
 
-        this.world.playSound(
-                this.getX(), this.getY(), this.getZ(),
-                SoundEvents.ENTITY_TNT_PRIMED,
-                SoundCategory.HOSTILE,
-                1.0f, this.random.nextFloat() * 0.4f + 0.8f,
-                false
-        );
+    Vec3d vec3d = this.getVelocity();
+    this.world.addParticle(
+        ParticleTypes.SNEEZE,
+        this.getX()
+            - (double) (this.getWidth() + 1.0f)
+                * 0.5
+                * (double) MathHelper.sin(this.bodyYaw * ((float) Math.PI / 180)),
+        this.getEyeY() - (double) 0.1f,
+        this.getZ()
+            + (double) (this.getWidth() + 1.0f)
+                * 0.5
+                * (double) MathHelper.cos(this.bodyYaw * ((float) Math.PI / 180)),
+        vec3d.x,
+        0.0,
+        vec3d.z);
 
-        Vec3d vec3d = this.getVelocity();
-        this.world.addParticle(
-                ParticleTypes.SNEEZE,
-                this.getX() - (double)(this.getWidth() + 1.0f) * 0.5 * (double) MathHelper.sin(this.bodyYaw * ((float)Math.PI / 180)),
-                this.getEyeY() - (double)0.1f,
-                this.getZ() + (double)(this.getWidth() + 1.0f) * 0.5 * (double)MathHelper.cos(this.bodyYaw * ((float)Math.PI / 180)),
-                vec3d.x, 0.0, vec3d.z
-        );
-
-        this.lastFuseTime = 0;
-        this.currentFuseTime = 0;
-        this.dataTracker.set(IGNITED, false);
-    }
+    this.lastFuseTime = 0;
+    this.currentFuseTime = 0;
+    this.dataTracker.set(IGNITED, false);
+  }
 }

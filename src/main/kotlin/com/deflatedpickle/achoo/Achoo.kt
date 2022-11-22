@@ -2,7 +2,8 @@
 
 package com.deflatedpickle.achoo
 
-import net.fabricmc.api.ModInitializer
+import org.quiltmc.loader.api.ModContainer
+import org.quiltmc.qsl.base.api.entrypoint.ModInitializer
 
 @Suppress("UNUSED")
 object Achoo : ModInitializer {
@@ -12,7 +13,7 @@ object Achoo : ModInitializer {
     private const val AUTHOR = "$[author]"
     private const val VERSION = "$[version]"
 
-    override fun onInitialize() {
+    override fun onInitialize(mod: ModContainer) {
         println(listOf(MOD_ID, NAME, GROUP, AUTHOR, VERSION))
     }
 }
